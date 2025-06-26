@@ -48,21 +48,38 @@ const findPDFFiles = async (directory: string): Promise<string[]> => {
   const files: string[] = [];
   
   const scanDirectory = async (dir: string): Promise<void> => {
-    const entries = await readdir(dir);
-    
-    for (const entry of entries) {
-      const fullPath = join(dir, entry);
-      const stats = await stat(fullPath);
+    try {
+      const entries = await readdir(dir);
       
-      if (stats.isDirectory()) {
-        await scanDirectory(fullPath);
-      } else if (extname(entry).toLowerCase() === '.pdf') {
-        files.push(fullPath);
+      for (const entry of entries) {
+        // Skip hidden files and directories
+        if (entry.startsWith('.')) continue;
+        
+        const fullPath = join(dir, entry);
+        
+        try {
+          const stats = await stat(fullPath);
+          
+          if (stats.isDirectory()) {
+            console.log(`📂 Scanning directory: ${fullPath}`);
+            await scanDirectory(fullPath);
+          } else if (extname(entry).toLowerCase() === '.pdf') {
+            console.log(`📄 Found PDF: ${fullPath}`);
+            files.push(fullPath);
+          }
+        } catch (statError) {
+          console.warn(`⚠️  Cannot access: ${fullPath} - ${statError}`);
+          continue;
+        }
       }
+    } catch (readError) {
+      console.warn(`⚠️  Cannot read directory: ${dir} - ${readError}`);
     }
   };
   
+  console.log(`🔍 Starting scan from: ${directory}`);
   await scanDirectory(directory);
+  console.log(`✅ Scan complete. Found ${files.length} PDF files total.`);
   return files;
 };
 
