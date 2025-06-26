@@ -11,9 +11,34 @@ interface PDFResult {
 
 const checkPDFLock = async (filePath: string): Promise<boolean> => {
   try {
-    const process = spawn(['gs', '-dNODISPLAY', '-dQUIET', '-dBATCH', '-dNOPAUSE', '-c', 'quit', filePath]);
-    const result = await process.exited;
-    return result !== 0;
+    // Try to get PDF info using Ghostscript - encrypted PDFs will fail with specific error
+    const process = spawn([
+      'gs', 
+      '-dNODISPLAY', 
+      '-dQUIET', 
+      '-dBATCH', 
+      '-dNOPAUSE',
+      '-dNOSAFER',
+      '-sDEVICE=nullpage',
+      '-sOutputFile=/dev/null',
+      filePath
+    ], {
+      stderr: 'pipe'
+    });
+    
+    const stderr = await new Response(process.stderr).text();
+    const exitCode = await process.exited;
+    
+    // Check for password/encryption related errors in stderr
+    const isPasswordProtected = stderr.includes('This file requires a password') ||
+                               stderr.includes('Password required') ||
+                               stderr.includes('InvalidPassword') ||
+                               stderr.includes('PDF file is encrypted') ||
+                               stderr.includes('Couldn\'t find trailer') ||
+                               stderr.includes('This document is password protected') ||
+                               (exitCode !== 0 && stderr.includes('Error'));
+    
+    return isPasswordProtected;
   } catch (error) {
     throw new Error(`Ghostscript error: ${error}`);
   }
