@@ -87,9 +87,8 @@ The tool provides two types of output:
 🔄 Checking: STM_SA1289_01JAN25_01JUN25_19121985.pdf
 🔓 Attempting to crack password for: STM_SA1289_01JAN25_01JUN25_19121985.pdf
    📝 Generated 98212 password candidates (prioritized by filename patterns)
-   🔄 Trying password: 01JAN25 (1/98212)
-   🔄 Trying password: 01JUN25 (2/98212)
-   🔄 Trying password: 19121985 (3/98212)
+   🖥️  Using 10 workers with 200 passwords per chunk (10 CPU cores detected)
+   🔄 Testing passwords in parallel: 2000/98212 (10 chunks)
    ✅ Password found: 19121985
 
 📋 PDF Password Check Results
@@ -109,16 +108,18 @@ The tool provides two types of output:
 ```markdown
 # PDF Password Protection Report
 
-**Total PDFs scanned:** 5
+**Total PDFs scanned:** 6
 **Password Protected:** 1
-**Passwords Cracked:** 2
+**Passwords Cracked:** 3
 **Accessible:** 2
 
 ## 🔓 Cracked Password Files
 - `financial_report_19851219.pdf` - /path/to/financial_report_19851219.pdf
-  - **Password:** `19121985`
+  - **Password:** `19121985` (Gregorian: 19 Dec 1985)
 - `statement_01Sep1995.pdf` - /path/to/statement_01Sep1995.pdf
-  - **Password:** `01091995`
+  - **Password:** `01091995` (Gregorian: 01 Sep 1995)
+- `document_thai_2528.pdf` - /path/to/document_thai_2528.pdf
+  - **Password:** `15032528` (Thai Buddhist: 15 Mar 2528 = 15 Mar 1985)
 
 ## 🔒 Still Password Protected Files
 - `secure.pdf` - /path/to/secure.pdf
@@ -132,15 +133,18 @@ The tool provides two types of output:
 
 ### Intelligent Password Generation
 1. **Filename Analysis**: Extracts date patterns from filenames for priority testing
-2. **Birthdate Optimization**: Targets ages 20-85 (birth years 1940-2005)
+2. **Birthdate Optimization**: Targets ages 20-85 (birth years 1940-2005 Gregorian + 2483-2548 Thai Buddhist)
 3. **Statistical Prioritization**: Tests high-birth months first (September, October, August)
-4. **Multiple Formats**: Supports ddMMYYYY, ddMMMYYYY, ddMMYY, ddMMMYY patterns
+4. **Multiple Calendar Systems**: Supports both Gregorian and Thai Buddhist calendar years
+5. **Multiple Formats**: Supports ddMMYYYY and ddMMMYYYY patterns
 
 ### Success Factors
 - **Pattern Recognition**: Identifies dates in filenames like `@STM_SA1289_01JAN25_01JUN25_19121985.pdf`
 - **Birth Statistics**: Prioritizes months with highest birth rates
-- **Age Demographics**: Focuses on realistic adult age ranges
-- **Format Variations**: Tests both numeric and text month formats
+- **Age Demographics**: Focuses on realistic adult age ranges (20-85 years old)
+- **Dual Calendar Support**: Tests both Gregorian (1985) and Thai Buddhist (2528) years
+- **Format Variations**: Tests both numeric (ddMMYYYY) and text month (ddMMMYYYY) formats
+- **CPU-Optimized Processing**: Dynamic worker count based on CPU cores for optimal performance
 
 ## Technical Details
 
@@ -149,7 +153,17 @@ The tool provides two types of output:
 - **Password Testing**: Ghostscript with `-sPDFPassword` parameter
 - **Architecture**: Functional programming patterns
 - **File Scanning**: Recursive directory traversal with error handling
-- **Performance**: Optimized for quick wins via filename analysis
+- **Performance**: CPU-optimized parallel processing with dynamic worker scaling
+- **Optimization**: Filename analysis for priority testing and quick wins
+
+### CPU Performance Scaling
+- **Worker Count**: Automatically matches CPU core count (2-16 workers)
+- **Chunk Size**: Dynamic sizing (50-200 passwords per chunk) based on CPU cores
+- **Batch Processing**: Processes 2000 passwords per batch across all workers
+- **Examples**:
+  - 2 CPU cores: 2 workers × 200 passwords = 400 per batch
+  - 8 CPU cores: 8 workers × 200 passwords = 1,600 per batch
+  - 16+ CPU cores: 16 workers × 125 passwords = 2,000 per batch
 
 ## Project Structure
 

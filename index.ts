@@ -1,6 +1,7 @@
 import { spawn } from 'bun';
 import { readdir, stat, writeFile } from 'fs/promises';
 import { join, extname } from 'path';
+import { cpus } from 'os';
 
 interface PDFResult {
   filename: string;
@@ -196,9 +197,13 @@ const crackPDFPassword = async (filePath: string): Promise<string | null> => {
   const passwords = generateDatePasswords(filename);
   console.log(`   📝 Generated ${passwords.length} password candidates (prioritized by filename patterns)`);
   
-  const chunkSize = 100; // Process 100 passwords per chunk
-  const maxConcurrency = 10; // Run up to 10 chunks in parallel
+  // Dynamic sizing based on CPU performance
+  const cpuCount = cpus().length;
+  const chunkSize = Math.max(50, Math.min(200, Math.floor(2000 / cpuCount))); // 50-200 passwords per chunk
+  const maxConcurrency = Math.max(2, Math.min(cpuCount, 16)); // 2-16 concurrent workers, max = CPU cores
   let attemptCount = 0;
+  
+  console.log(`   🖥️  Using ${maxConcurrency} workers with ${chunkSize} passwords per chunk (${cpuCount} CPU cores detected)`);
   
   // Process passwords in parallel chunks
   for (let i = 0; i < passwords.length; i += chunkSize * maxConcurrency) {
