@@ -112,9 +112,14 @@ const generateDatePasswords = (filename?: string): string[] => {
   // Generate systematic date patterns for birthdate years (people 20-85 years old)
   const currentYear = new Date().getFullYear();
   const years = [];
-  // Birth years for ages 20-85 (1940-2005)
+  // Birth years for ages 20-85 (1940-2005 Gregorian)
   for (let age = 20; age <= 85; age++) {
-    years.push(currentYear - age);
+    const gregorianYear = currentYear - age;
+    years.push(gregorianYear);
+    
+    // Add Thai Buddhist calendar year (543 years ahead)
+    const thaiYear = gregorianYear + 543;
+    years.push(thaiYear);
   }
   
   // Prioritize months with highest birth rates: September, October, August, then others

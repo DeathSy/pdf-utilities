@@ -7,6 +7,6 @@
 
 ## 🔓 Cracked Password Files
 
-- `STM_SA1289_01JAN25_01JUN25_19121985.pdf` - test-parallel/STM_SA1289_01JAN25_01JUN25_19121985.pdf
+- `STM_SA1289_01JAN25_01JUN25_19121985.pdf` - test-thai/STM_SA1289_01JAN25_01JUN25_19121985.pdf
   - **Password:** `19121985`
 
