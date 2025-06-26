@@ -1,11 +1,12 @@
 # PDF Password Protection Report
 
-**Total PDFs scanned:** 2
-**Password Protected:** 2
+**Total PDFs scanned:** 1
+**Password Protected:** 0
+**Passwords Cracked:** 1
 **Accessible:** 0
 
-## 🔒 Password Protected Files
+## 🔓 Cracked Password Files
 
-- `STM_SA1289_01JAN25_01JUN25_19121985.pdf` - test-structure/level1/level2/deep/STM_SA1289_01JAN25_01JUN25_19121985.pdf
-- `STM_SA1289_01JAN25_01JUN25_19121985.pdf` - test-structure/another/path/STM_SA1289_01JAN25_01JUN25_19121985.pdf
+- `STM_SA1289_01JAN25_01JUN25_19121985.pdf` - test-optimized/STM_SA1289_01JAN25_01JUN25_19121985.pdf
+  - **Password:** `19121985`
 
