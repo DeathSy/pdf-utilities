@@ -137,10 +137,7 @@ const generateDatePasswords = (filename?: string): string[] => {
         // ddMMMYYYY format  
         passwords.push(`${dayStr}${monthNames[monthIndex]}${year}`);
         
-        // ddMMYY format (short year)
-        const shortYear = year.toString().slice(-2);
-        passwords.push(`${dayStr}${months[monthIndex]}${shortYear}`);
-        passwords.push(`${dayStr}${monthNames[monthIndex]}${shortYear}`);
+        // Remove 2-digit year formats as requested
       }
     }
   }
@@ -175,29 +172,56 @@ const tryPassword = async (filePath: string, password: string): Promise<boolean>
   }
 };
 
+const crackPDFPasswordParallel = async (filePath: string, passwords: string[], startIndex: number, chunkSize: number): Promise<string | null> => {
+  const chunk = passwords.slice(startIndex, startIndex + chunkSize);
+  
+  for (const password of chunk) {
+    if (await tryPassword(filePath, password)) {
+      return password;
+    }
+  }
+  
+  return null;
+};
+
 const crackPDFPassword = async (filePath: string): Promise<string | null> => {
   const filename = filePath.split('/').pop() || '';
   console.log(`🔓 Attempting to crack password for: ${filename}`);
   
   const passwords = generateDatePasswords(filename);
-  let attemptCount = 0;
-  
   console.log(`   📝 Generated ${passwords.length} password candidates (prioritized by filename patterns)`);
   
-  for (const password of passwords) {
-    attemptCount++;
+  const chunkSize = 100; // Process 100 passwords per chunk
+  const maxConcurrency = 10; // Run up to 10 chunks in parallel
+  let attemptCount = 0;
+  
+  // Process passwords in parallel chunks
+  for (let i = 0; i < passwords.length; i += chunkSize * maxConcurrency) {
+    const promises: Promise<string | null>[] = [];
     
-    if (attemptCount <= 20 || attemptCount % 50 === 0) {
-      console.log(`   🔄 Trying password: ${password} (${attemptCount}/${passwords.length})`);
+    // Create parallel chunks
+    for (let j = 0; j < maxConcurrency && (i + j * chunkSize) < passwords.length; j++) {
+      const startIndex = i + j * chunkSize;
+      promises.push(crackPDFPasswordParallel(filePath, passwords, startIndex, chunkSize));
     }
     
-    if (await tryPassword(filePath, password)) {
-      console.log(`   ✅ Password found: ${password}`);
-      return password;
+    // Log progress
+    attemptCount += promises.length * chunkSize;
+    const currentAttempt = Math.min(attemptCount, passwords.length);
+    console.log(`   🔄 Testing passwords in parallel: ${currentAttempt}/${passwords.length} (${promises.length} chunks)`);
+    
+    // Wait for all chunks to complete or find a password
+    const results = await Promise.allSettled(promises);
+    
+    for (const result of results) {
+      if (result.status === 'fulfilled' && result.value) {
+        console.log(`   ✅ Password found: ${result.value}`);
+        return result.value;
+      }
     }
   }
   
-  console.log(`   ❌ Password not found after ${attemptCount} attempts`);
+  console.log(`   ❌ Password not found after ${passwords.length} attempts`);
   return null;
 };
 
